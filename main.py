@@ -305,6 +305,31 @@ async def list_sources(
     return db.query(database.Source).filter(database.Source.user_id == current_user.id).all()
 
 
+@app.put("/api/sources/{source_id}", response_model=schemas.SourceResponse)
+async def update_source(
+    source_id: int,
+    payload: schemas.SourceUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: database.User = Depends(auth.get_current_user),
+):
+    source = (
+        db.query(database.Source)
+        .filter(database.Source.id == source_id, database.Source.user_id == current_user.id)
+        .first()
+    )
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    if payload.name is not None:
+        source.name = payload.name
+    if payload.balance is not None:
+        source.balance = payload.balance
+
+    db.commit()
+    db.refresh(source)
+    return source
+
+
 @app.post("/api/transactions", response_model=schemas.TransactionResponse)
 async def create_transaction(
     transaction: schemas.TransactionCreate,

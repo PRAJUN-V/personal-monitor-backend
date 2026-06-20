@@ -80,6 +80,16 @@ class SourceCreate(BaseModel):
     balance: float = 0.0
 
 
+class SourceUpdate(BaseModel):
+    name: Optional[str] = None
+    balance: Optional[float] = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def empty_string_to_null(cls, v):
+        return None if v == "" else v
+
+
 class SourceResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

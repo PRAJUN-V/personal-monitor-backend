@@ -157,6 +157,33 @@ def test_transaction_updates_and_reverses_balance(client):
     assert client.get("/api/sources", headers=headers).json()[0]["balance"] == 1000
 
 
+def test_update_source_name_and_balance(client):
+    client.post("/register", json={"username": "f3", "password": "pw"})
+    headers = auth_header(client, "f3", "pw")
+    source = client.post("/api/sources", headers=headers, json={"name": "Csah", "balance": 100}).json()
+
+    # Fix a typo in the name and correct a wrong initial balance.
+    upd = client.put(
+        f"/api/sources/{source['id']}",
+        headers=headers,
+        json={"name": "Cash", "balance": 5000},
+    )
+    assert upd.status_code == 200
+    assert upd.json()["name"] == "Cash"
+    assert upd.json()["balance"] == 5000
+
+    # Partial update: only the balance.
+    upd2 = client.put(f"/api/sources/{source['id']}", headers=headers, json={"balance": 250})
+    assert upd2.json()["name"] == "Cash"
+    assert upd2.json()["balance"] == 250
+
+
+def test_update_source_not_found(client):
+    client.post("/register", json={"username": "f4", "password": "pw"})
+    headers = auth_header(client, "f4", "pw")
+    assert client.put("/api/sources/999", headers=headers, json={"name": "X"}).status_code == 404
+
+
 def test_income_increases_balance(client):
     client.post("/register", json={"username": "f2", "password": "pw"})
     headers = auth_header(client, "f2", "pw")
