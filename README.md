@@ -79,9 +79,9 @@ This repo deploys to **Render** and runs CI on **GitHub Actions**.
 
 ### How CI/CD works
 
-- `.github/workflows/ci.yml` runs on every push/PR to `main`: installs deps,
+- `.github/workflows/ci.yml` runs on every push/PR to `master`: installs deps,
   imports the app, and compiles all sources.
-- **Deploy** is handled by Render's native auto-deploy on push to `main`
+- **Deploy** is handled by Render's native auto-deploy on push to `master`
   (`autoDeploy: true` in `render.yaml`).
 - *(Optional, gated deploy)* To only deploy after CI passes: turn **off**
   Auto-Deploy on Render, copy the service's **Deploy Hook** URL, and add it as
