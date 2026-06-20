@@ -2,9 +2,9 @@ name: Backend CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build:
@@ -31,7 +31,7 @@ jobs:
   deploy:
     name: Deploy to Render
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       # Optional gated deploy: only runs if you add a RENDER_DEPLOY_HOOK_URL

@@ -8,8 +8,6 @@ services:
     name: personal-monitor-backend
     runtime: python
     plan: free
-    # Branch Render builds from. Change if you don't use "main".
-    branch: main
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
