@@ -1,0 +1,49 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Import check (boots the app module)
+        run: python -c "import main; print('app import OK')"
+
+      - name: Compile all sources
+        run: python -m compileall -q .
+
+  deploy:
+    name: Deploy to Render
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      # Optional gated deploy: only runs if you add a RENDER_DEPLOY_HOOK_URL
+      # secret AND disable "Auto-Deploy" on the Render service. Otherwise
+      # Render's native auto-deploy handles it and this step is a no-op.
+      - name: Trigger Render deploy hook
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -n "$HOOK" ]; then
+            echo "Triggering Render deploy..."
+            curl -fsSL -X POST "$HOOK"
+          else
+            echo "No RENDER_DEPLOY_HOOK_URL set; relying on Render native auto-deploy."
+          fi

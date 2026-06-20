@@ -1,0 +1,48 @@
+# Render Blueprint for the Personal Monitor backend (FastAPI).
+# This repo is the root of the backend service, so no rootDir is needed.
+# Deploy: on Render, New + > Blueprint, then connect this GitHub repo.
+# Render auto-deploys on every push to the connected branch.
+
+services:
+  - type: web
+    name: personal-monitor-backend
+    runtime: python
+    plan: free
+    # Branch Render builds from. Change if you don't use "main".
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      # Auto-generated strong secret for signing JWTs.
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      # Comma-separated allowed origins. Set this to your Netlify site URL,
+      # e.g. https://your-app.netlify.app  (set in the Render dashboard).
+      - key: CORS_ORIGINS
+        sync: false
+      # Postgres connection string. Leave unset to use ephemeral SQLite
+      # (NOT recommended on Render — the disk is wiped on each deploy/restart).
+      # Provision a Render PostgreSQL instance and paste its Internal URL here,
+      # or uncomment the `databases` block below to have Render create one.
+      - key: DATABASE_URL
+        sync: false
+
+# Optional: let Render provision a managed PostgreSQL database and wire it in.
+# NOTE: Render's free database is removed ~30 days after creation.
+# To use it, uncomment this block AND the fromDatabase env var below.
+#
+# databases:
+#   - name: personal-monitor-db
+#     plan: free
+#
+# Then replace the DATABASE_URL envVar above with:
+#       - key: DATABASE_URL
+#         fromDatabase:
+#           name: personal-monitor-db
+#           property: connectionString
