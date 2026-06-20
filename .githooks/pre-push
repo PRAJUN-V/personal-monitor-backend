@@ -1,0 +1,18 @@
+#!/bin/sh
+# Pre-push hook: run the backend test suite before allowing a push.
+# Enable once per clone with:  git config core.hooksPath .githooks
+set -e
+
+echo "[pre-push] Running backend tests..."
+
+if [ -x "venv/Scripts/python.exe" ]; then
+  PY="venv/Scripts/python.exe"      # Windows virtualenv
+elif [ -x "venv/bin/python" ]; then
+  PY="venv/bin/python"              # macOS / Linux virtualenv
+else
+  PY="python"                       # fall back to PATH
+fi
+
+"$PY" -m pytest -q
+
+echo "[pre-push] Backend tests passed. Proceeding with push."

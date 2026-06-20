@@ -1,0 +1,4 @@
+# Development / testing dependencies (not needed in production).
+-r requirements.txt
+pytest
+httpx

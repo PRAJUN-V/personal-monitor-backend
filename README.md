@@ -94,6 +94,28 @@ Typical change workflow:
 > once to mark the existing schema as current, so `upgrade head` won't try to
 > recreate existing tables. (This was already done for the live Neon database.)
 
+## Testing
+
+Tests use pytest with an in-memory SQLite database (the real DB is never touched).
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+```
+
+### Run tests automatically before every push
+
+A `pre-push` git hook lives in `.githooks/`. Enable it once per clone:
+
+```bash
+git config core.hooksPath .githooks
+# macOS/Linux only: make it executable
+chmod +x .githooks/pre-push
+```
+
+Now `git push` runs `pytest` first and aborts the push if any test fails — fix,
+commit, and push again.
+
 ## Deployment (Render) & CI/CD
 
 This repo deploys to **Render** and runs CI on **GitHub Actions**.
@@ -119,7 +141,7 @@ This repo deploys to **Render** and runs CI on **GitHub Actions**.
 ### How CI/CD works
 
 - `.github/workflows/ci.yml` runs on every push/PR to `master`: installs deps,
-  imports the app, and compiles all sources.
+  imports the app, compiles all sources, and runs `pytest`.
 - **Deploy** is handled by Render's native auto-deploy on push to `master`
   (`autoDeploy: true` in `render.yaml`).
 - *(Optional, gated deploy)* To only deploy after CI passes: turn **off**
