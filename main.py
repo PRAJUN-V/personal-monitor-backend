@@ -90,7 +90,87 @@ async def login_for_access_token(
 
 @app.get("/api/me")
 async def read_users_me(current_user: database.User = Depends(auth.get_current_user)):
-    return {"username": current_user.username}
+    return {"username": current_user.username, "is_admin": current_user.is_admin}
+
+
+# ---------------- Admin: user management ----------------
+@app.get("/api/users", response_model=List[schemas.UserResponse])
+async def list_users(
+    db: Session = Depends(database.get_db),
+    _admin: database.User = Depends(auth.get_current_admin),
+):
+    return db.query(database.User).order_by(database.User.id).all()
+
+
+@app.post("/api/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user(
+    payload: schemas.AdminUserCreate,
+    db: Session = Depends(database.get_db),
+    _admin: database.User = Depends(auth.get_current_admin),
+):
+    existing = db.query(database.User).filter(database.User.username == payload.username).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    new_user = database.User(
+        username=payload.username,
+        hashed_password=auth.get_password_hash(payload.password),
+        is_admin=payload.is_admin,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+
+@app.put("/api/users/{user_id}", response_model=schemas.UserResponse)
+async def update_user(
+    user_id: int,
+    payload: schemas.UserUpdate,
+    db: Session = Depends(database.get_db),
+    admin: database.User = Depends(auth.get_current_admin),
+):
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if payload.username is not None and payload.username != user.username:
+        clash = (
+            db.query(database.User)
+            .filter(database.User.username == payload.username, database.User.id != user_id)
+            .first()
+        )
+        if clash:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        user.username = payload.username
+
+    if payload.password is not None:
+        user.hashed_password = auth.get_password_hash(payload.password)
+
+    if payload.is_admin is not None:
+        # Prevent admins from removing their own admin rights (avoids lockout).
+        if user.id == admin.id and payload.is_admin is False:
+            raise HTTPException(status_code=400, detail="You cannot revoke your own admin access")
+        user.is_admin = payload.is_admin
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@app.delete("/api/users/{user_id}")
+async def delete_user(
+    user_id: int,
+    db: Session = Depends(database.get_db),
+    admin: database.User = Depends(auth.get_current_admin),
+):
+    if user_id == admin.id:
+        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted"}
 
 
 # ---------------- Health ----------------

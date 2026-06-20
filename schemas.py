@@ -15,6 +15,32 @@ class Token(BaseModel):
     token_type: str
 
 
+# ---------- User management (admin) ----------
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    is_admin: bool
+
+
+class AdminUserCreate(BaseModel):
+    username: str
+    password: str
+    is_admin: bool = False
+
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    is_admin: Optional[bool] = None
+
+    @field_validator("username", "password", mode="before")
+    @classmethod
+    def empty_string_to_null(cls, v):
+        return None if v == "" else v
+
+
 # ---------- Health ----------
 class HealthRecordCreate(BaseModel):
     date: Optional[str] = None

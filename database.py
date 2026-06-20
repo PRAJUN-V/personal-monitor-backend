@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy import create_engine
+from sqlalchemy.sql import expression
 import datetime
 import os
 
@@ -27,6 +28,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    is_admin = Column(Boolean, nullable=False, server_default=expression.false(), default=False)
 
     health_records = relationship("HealthRecord", back_populates="owner", cascade="all, delete-orphan")
     sources = relationship("Source", back_populates="owner", cascade="all, delete-orphan")

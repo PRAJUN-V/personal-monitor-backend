@@ -55,6 +55,19 @@ curl -X POST http://localhost:8000/register \
 | GET/POST | `/api/sources` | List / create money sources |
 | GET/POST | `/api/transactions` | List / create transactions |
 | DELETE | `/api/transactions/{id}` | Delete a transaction |
+| GET/POST | `/api/users` | **(admin)** List / create users |
+| PUT/DELETE | `/api/users/{id}` | **(admin)** Edit / delete a user |
+
+### Roles
+
+Users have an `is_admin` flag. Admins can manage other users (create, list,
+edit username/password, toggle admin, delete) via the `/api/users` endpoints —
+these return `403` for non-admins. `/api/me` includes `is_admin` so the frontend
+can show the admin section. To promote a user from the DB:
+
+```sql
+UPDATE users SET is_admin = true WHERE username = 'someone';
+```
 
 All `/api/*` routes (except `/api/me` semantics) require an `Authorization: Bearer <token>` header.
 
