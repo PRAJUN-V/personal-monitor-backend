@@ -5,7 +5,7 @@ REST API for the Personal Monitor app: JWT auth, health records (BMI), and finan
 ## Stack
 
 - FastAPI + Uvicorn
-- SQLAlchemy ORM
+- SQLAlchemy ORM + **Alembic** migrations
 - JWT auth (python-jose) + bcrypt password hashing
 - SQLite by default, Postgres/Neon via `DATABASE_URL`
 
@@ -25,14 +25,17 @@ cp .env.example .env   # optional, edit as needed
 
 ## Run
 
+Apply database migrations first, then start the server:
+
 ```bash
+alembic upgrade head
 uvicorn main:app --reload --port 8000
 ```
 
 - API root: http://localhost:8000
 - Interactive docs: http://localhost:8000/docs
 
-Tables are created automatically on startup. There is no UI for registration, so create your user first:
+There is no UI for registration, so create your user first:
 
 ```bash
 curl -X POST http://localhost:8000/register \
@@ -54,6 +57,29 @@ curl -X POST http://localhost:8000/register \
 | DELETE | `/api/transactions/{id}` | Delete a transaction |
 
 All `/api/*` routes (except `/api/me` semantics) require an `Authorization: Bearer <token>` header.
+
+## Database migrations (Alembic)
+
+The schema is managed by Alembic, not by `create_all()`. The `DATABASE_URL`
+environment variable drives which database is targeted (see `alembic/env.py`).
+
+```bash
+alembic upgrade head                       # apply all pending migrations
+alembic revision --autogenerate -m "msg"   # create a migration after editing models in database.py
+alembic downgrade -1                        # roll back one migration
+alembic current                             # show the DB's current revision
+alembic history                             # list all migrations
+```
+
+Typical change workflow:
+1. Edit the models in `database.py`.
+2. Run `alembic revision --autogenerate -m "describe change"`.
+3. Review the generated file in `alembic/versions/`.
+4. Commit it. On the next deploy, Render runs `alembic upgrade head` automatically.
+
+> **Adopting Alembic on a DB that already has tables?** Run `alembic stamp head`
+> once to mark the existing schema as current, so `upgrade head` won't try to
+> recreate existing tables. (This was already done for the live Neon database.)
 
 ## Deployment (Render) & CI/CD
 

@@ -8,10 +8,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 import auth
-import database
+import database  # noqa: F401  (kept for side-effect imports / consistency)
 import schemas
 
-database.init_db()
+# Schema is managed by Alembic migrations (`alembic upgrade head`), which runs
+# automatically on deploy. We intentionally do NOT call create_all() here.
 
 app = FastAPI(title="Personal Monitor API", version="1.0.0")
 

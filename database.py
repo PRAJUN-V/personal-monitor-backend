@@ -76,7 +76,13 @@ class Transaction(Base):
 
 
 def init_db():
-    """Create tables if they don't exist (simple alternative to migrations for dev)."""
+    """Create all tables directly from the models.
+
+    Schema management is handled by Alembic (`alembic upgrade head`), so the app
+    no longer calls this on startup. It remains as an optional convenience for
+    quick local experiments only — do NOT use it against a database managed by
+    Alembic, or the migration history and the schema can drift out of sync.
+    """
     Base.metadata.create_all(bind=engine)
 
 

@@ -1,0 +1,15 @@
+Alembic migrations for the Personal Monitor backend.
+
+The database URL is read from the DATABASE_URL environment variable at runtime
+(see env.py); it falls back to local SQLite when unset.
+
+Common commands (run from personal-monitor-backend/):
+
+  alembic upgrade head                      # apply all migrations
+  alembic revision --autogenerate -m "msg"  # create a migration from model changes
+  alembic downgrade -1                       # roll back one migration
+  alembic current                            # show current DB revision
+  alembic history                            # list migrations
+
+On Render the start command runs `alembic upgrade head` automatically before
+launching the server, so deploys keep the schema up to date.
