@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
-from pydantic import BaseModel, field_validator, ConfigDict
+from pydantic import BaseModel, field_validator, field_serializer, ConfigDict
 
 
 # ---------- Auth ----------
@@ -123,3 +123,9 @@ class TransactionResponse(BaseModel):
     category: str
     date: datetime
     description: Optional[str] = None
+
+    @field_serializer("date")
+    def serialize_date_utc(self, dt: datetime) -> str:
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.strftime("%Y-%m-%dT%H:%M:%S") + "Z"

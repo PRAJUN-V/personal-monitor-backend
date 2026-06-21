@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import List
 import os
 
@@ -350,11 +350,14 @@ async def create_transaction(
     trans_data = transaction.model_dump()
     if trans_data["date"]:
         try:
-            trans_data["date"] = datetime.fromisoformat(trans_data["date"].replace("Z", "+00:00"))
+            dt = datetime.fromisoformat(trans_data["date"].replace("Z", "+00:00"))
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+            trans_data["date"] = dt
         except ValueError:
             trans_data["date"] = datetime.strptime(trans_data["date"], "%Y-%m-%d")
     else:
-        trans_data["date"] = datetime.utcnow()
+        trans_data["date"] = datetime.now(timezone.utc).replace(tzinfo=None)
 
     new_transaction = database.Transaction(**trans_data, user_id=current_user.id)
 
